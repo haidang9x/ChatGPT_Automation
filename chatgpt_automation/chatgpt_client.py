@@ -45,6 +45,9 @@ class ChatGPT_Client:
     textarea_iq = 'prompt-textarea'
     gpt_xq    = '//span[text()="{}"]'
 
+    username = None
+    password = None
+
     def __init__(
         self,
         username :str = '',
@@ -63,8 +66,8 @@ class ChatGPT_Client:
                 "Please adjust your environment variables to pass username and password."
             )
 
-        username = username or os.environ.get('OPENAI_UNAME')
-        password = password or os.environ.get('OPENAI_PWD')
+        self.username = username = username or os.environ.get('OPENAI_UNAME')
+        self.password = password = password or os.environ.get('OPENAI_PWD')
 
         if not username:
             logging.error('Either provide username or set the environment variable "OPENAI_UNAME"')
@@ -295,6 +298,9 @@ class ChatGPT_Client:
             logging.info('Unable to locate text area tag. Switching to ID search')
             text_area = self.browser.find_elements(By.ID, self.textarea_iq)
         if not text_area:
+            self.browser.quit()
+            self.login(username=self.username, password=self.password)
+            return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
 
         text_area = text_area[0]
