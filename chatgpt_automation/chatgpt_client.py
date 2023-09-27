@@ -50,6 +50,7 @@ class ChatGPT_Client:
     locals = None
     options = None
     response_timeout = 600
+    closed = False
 
     def __init__(
         self,
@@ -86,13 +87,9 @@ class ChatGPT_Client:
         self.locals = locals()
 
         self.goLogin()
-        if not cold_start:
-            self.pass_verification()
-            self.login(username, password)
-        logging.info('ChatGPT is ready to interact')
 
     def goLogin(self):
-        
+        self.closed = False
         options = uc.ChromeOptions()
         if self.locals['incognito']:
             options.add_argument('--incognito')
@@ -118,6 +115,11 @@ class ChatGPT_Client:
         self.browser.execute_script(
             f"window.localStorage.setItem('oai/apps/hasSeenOnboarding/chat', {datetime.today().strftime('%Y-%m-%d')});"
         )
+
+        if not self.locals['cold_start']:
+            self.pass_verification()
+            self.login(self.username, self.password)
+        logging.info('ChatGPT is ready to interact')
 
     def find_or_fail(self, by, query, return_elements=False, fail_ok=False):
         """Finds a list of elements given query, if none of the items exists, throws an error
@@ -347,10 +349,10 @@ class ChatGPT_Client:
                 }
                 deleteAllCookies();
             """)
+            self.closed = True
             self.browser.quit()
             return
             # self.goLogin()
-            # self.login(username=self.username, password=self.password)
             # return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
 
