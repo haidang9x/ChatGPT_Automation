@@ -52,6 +52,7 @@ class ChatGPT_Client:
     response_timeout = 600
     closed = False
     challenge = False
+    login_failed = False
 
     def __init__(
         self,
@@ -92,6 +93,7 @@ class ChatGPT_Client:
     def goLogin(self):
         self.closed = False
         self.challenge = False
+        self.login_failed = False
         options = uc.ChromeOptions()
         if self.locals['incognito']:
             options.add_argument('--incognito')
@@ -121,6 +123,10 @@ class ChatGPT_Client:
         if not self.locals['cold_start']:
             self.pass_verification()
             self.login(self.username, self.password)
+        # if self.browser.find_elements(By.CSS_SELECTOR, '#error-element-password'):
+        #     self.login_failed = True
+        #     self.closed = True
+        #     self.browser.quit()
         logging.info('ChatGPT is ready to interact')
 
     def find_or_fail(self, by, query, return_elements=False, fail_ok=False):
@@ -328,7 +334,7 @@ class ChatGPT_Client:
             str: The generated answer.
         '''
 
-        if self.browser.find_elements(By.CSS_SELECTOR, '#enforcement-container iframe') or self.browser.find_elements(By.CSS_SELECTOR, 'iframe[title="Verification challenge"]'):
+        if self.browser.find_elements(By.CSS_SELECTOR, '#enforcement-container .active iframe') or self.browser.find_elements(By.CSS_SELECTOR, 'iframe.show[title="Verification challenge"]'):
             self.challenge = True
             self.browser.quit()
             raise RuntimeError('Cloudflare challenge!')
