@@ -92,12 +92,21 @@ class ChatGPT_Client:
             for _arg in driver_arguments:
                 options.add_argument(_arg)
 
+        self.goLogin()
+        if not cold_start:
+            self.pass_verification()
+            self.login(username, password)
+        logging.info('ChatGPT is ready to interact')
+
+    def goLogin(self):
+        
         logging.info('Loading undetected Chrome')
+
         self.browser = uc.Chrome(
-            driver_executable_path=driver_executable_path,
-            options=options,
-            headless=headless,
-            version_main=detect_chrome_version(driver_version),
+            driver_executable_path=self.locals['driver_executable_path'],
+            options=self.locals['options'],
+            headless=self.locals['headless'],
+            version_main=detect_chrome_version(self.locals['driver_version']),
             log_level=10,
         )
         self.browser.set_page_load_timeout(15)
@@ -107,10 +116,6 @@ class ChatGPT_Client:
         self.browser.execute_script(
             f"window.localStorage.setItem('oai/apps/hasSeenOnboarding/chat', {datetime.today().strftime('%Y-%m-%d')});"
         )
-        if not cold_start:
-            self.pass_verification()
-            self.login(username, password)
-        logging.info('ChatGPT is ready to interact')
 
     def find_or_fail(self, by, query, return_elements=False, fail_ok=False):
         """Finds a list of elements given query, if none of the items exists, throws an error
@@ -301,7 +306,8 @@ class ChatGPT_Client:
             text_area = self.browser.find_elements(By.ID, self.textarea_iq)
         if not text_area:
             self.browser.quit()
-            self.__init__(**self.locals)
+            self.goLogin()
+            self.login(username=self.username, password=self.password)
             return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
 
