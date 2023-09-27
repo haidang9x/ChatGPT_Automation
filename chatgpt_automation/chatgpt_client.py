@@ -57,7 +57,7 @@ class ChatGPT_Client:
         password :str = '',
         headless :bool = True,
         cold_start :bool = False,
-        incognito :bool = True,
+        incognito :bool = False,
         driver_executable_path :str =None,
         driver_arguments : list = None,
         driver_version: int = None,
@@ -333,10 +333,25 @@ class ChatGPT_Client:
             logging.info('Unable to locate text area tag. Switching to ID search')
             text_area = self.browser.find_elements(By.ID, self.textarea_iq)
         if not text_area:
+
+            self.browser.execute_script("""
+                function deleteAllCookies() {
+                    const cookies = document.cookie.split(";");
+
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i];
+                        const eqPos = cookie.indexOf("=");
+                        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                    }
+                }
+                deleteAllCookies();
+            """)
             self.browser.quit()
-            self.goLogin()
-            self.login(username=self.username, password=self.password)
-            return self.interact(question=question)
+            return
+            # self.goLogin()
+            # self.login(username=self.username, password=self.password)
+            # return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
 
         text_area = text_area[0]
