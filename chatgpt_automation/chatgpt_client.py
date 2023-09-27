@@ -80,8 +80,9 @@ class ChatGPT_Client:
         options = uc.ChromeOptions()
         if incognito:
             options.add_argument('--incognito')
-        if headless:
-            options.add_argument('--headless')
+        # if headless:
+        #     options.add_argument('--headless')
+        options.headless = False
         if driver_arguments:
             for _arg in driver_arguments:
                 options.add_argument(_arg)
