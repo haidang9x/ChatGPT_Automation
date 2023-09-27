@@ -2,30 +2,68 @@ import re
 import subprocess
 import logging
 import platform
+import os
+
+def extract_version_registry(output):
+    try:
+        google_version = ''
+        for letter in output[output.rindex('DisplayVersion    REG_SZ') + 24:]:
+            if letter != '\n':
+                google_version += letter
+            else:
+                break
+        return(google_version.strip())
+    except TypeError:
+        return
+
+def extract_version_folder():
+    # Check if the Chrome folder exists in the x32 or x64 Program Files folders.
+    for i in range(2):
+        path = 'C:\\Program Files' + (' (x86)' if i else '') +'\\Google\\Chrome\\Application'
+        if os.path.isdir(path):
+            paths = [f.path for f in os.scandir(path) if f.is_dir()]
+            for path in paths:
+                filename = os.path.basename(path)
+                pattern = '\d+\.\d+\.\d+\.\d+'
+                match = re.search(pattern, filename)
+                if match and match.group():
+                    # Found a Chrome version.
+                    return match.group(0)
+
+    return None
 
 def detect_chrome_version(version_num=None):
     '''
         Detects chrome version, only supports linux and mac machines.
         If the command return something else than expected output, it uses the default version 112.
     '''
-
     if version_num:
         logging.debug(f'Version number is provided: {version_num}')
         return version_num
+    
+    version = None
+    install_path = None
 
-    if platform.system() == 'Windows':
-        if not version_num:
-            logging.warning('Windows detected, no version number is provided, default: 112')
-            return 112
-        return version_num
+    try:
+        if platform == "linux" or platform == "linux2":
+            # linux
+            install_path = "/usr/bin/google-chrome"
+        elif platform == "darwin":
+            # OS X
+            install_path = "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+        elif platform == "win32":
+            # Windows...
+            try:
+                # Try registry key.
+                stream = os.popen('reg query "HKLM\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Google Chrome"')
+                output = stream.read()
+                version = extract_version_registry(output)
+            except Exception as ex:
+                # Try folder path.
+                version = extract_version_folder()
+    except Exception as ex:
+        print(ex)
 
-    out = subprocess.check_output(['google-chrome', '--version'])
-    out = re.search(r'Google\s+Chrome\s+(\d{3})', out.decode())
-    _v = 112
-    if not out:
-        logging.info('Could\'nt locate chrome version, using default value: 112')
-    else:
-        _v = int(out.group(1))
-        logging.info(f'The version is {_v}')
+    version = os.popen(f"{install_path} --version").read().strip('Google Chrome ').strip() if install_path else version
 
-    return _v
+    return version
