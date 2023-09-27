@@ -302,7 +302,6 @@ class ChatGPT_Client:
         if not text_area:
             self.browser.quit()
             self.__init__(**self.locals)
-            self.login(username=self.username, password=self.password)
             return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
 
