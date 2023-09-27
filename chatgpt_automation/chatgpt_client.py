@@ -51,7 +51,7 @@ class ChatGPT_Client:
     options = None
     response_timeout = 600
     closed = False
-    challenged = False
+    challenge = False
 
     def __init__(
         self,
@@ -91,7 +91,7 @@ class ChatGPT_Client:
 
     def goLogin(self):
         self.closed = False
-        self.challenged = False
+        self.challenge = False
         options = uc.ChromeOptions()
         if self.locals['incognito']:
             options.add_argument('--incognito')
@@ -337,8 +337,8 @@ class ChatGPT_Client:
             logging.info('Unable to locate text area tag. Switching to ID search')
             text_area = self.browser.find_elements(By.ID, self.textarea_iq)
         
-        if self.browser.find_elements(By.ID, 'enforcement-container'):
-            self.challenged = True
+        if self.browser.find_elements(By.CSS_SELECTOR, '#enforcement-container iframe'):
+            self.challenge = True
             self.browser.quit()
             raise RuntimeError('Cloudflare challenge!')
             return
