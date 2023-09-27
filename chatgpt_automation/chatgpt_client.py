@@ -51,6 +51,7 @@ class ChatGPT_Client:
     options = None
     response_timeout = 600
     closed = False
+    challenged = False
 
     def __init__(
         self,
@@ -334,6 +335,12 @@ class ChatGPT_Client:
         if not text_area:
             logging.info('Unable to locate text area tag. Switching to ID search')
             text_area = self.browser.find_elements(By.ID, self.textarea_iq)
+        
+        if self.browser.find_elements(By.ID, 'enforcement-container'):
+            self.challenged = True
+            self.browser.quit()
+            raise RuntimeError('Cloudflare challenge!')
+            return
         if not text_area:
 
             self.browser.execute_script("""
