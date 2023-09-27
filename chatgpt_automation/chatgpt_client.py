@@ -357,8 +357,7 @@ class ChatGPT_Client:
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
             return
         text_area = text_area[0]
-        text_area.send_keys('')
-        self.browser.find_element_by_css_selector("#prompt-textarea").clear()
+        text_area[0].clear()
 
         for each_line in question.split('\n'):
             text_area.send_keys(each_line)
