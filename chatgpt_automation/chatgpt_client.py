@@ -39,7 +39,7 @@ class ChatGPT_Client:
 
     chatbox_cq  = 'text-base'
     wait_cq     = 'text-2xl'
-    reset_xq    = '//a[//span[text()="New chat"]]'
+    reset_xq    = '//a[//span[text()="New Chat"]]'
     regen_xq    = '//div[text()="Regenerate"]'
     textarea_tq = 'textarea'
     textarea_iq = 'prompt-textarea'
