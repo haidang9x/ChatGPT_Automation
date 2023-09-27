@@ -48,6 +48,8 @@ class ChatGPT_Client:
     username = None
     password = None
     locals = None
+    options = None
+    response_timeout = 600
 
     def __init__(
         self,
@@ -91,7 +93,7 @@ class ChatGPT_Client:
             for _arg in driver_arguments:
                 options.add_argument(_arg)
         self.locals = locals()
-        self.locals['options'] = options
+        self.options = options
 
         self.goLogin()
         if not cold_start:
@@ -105,7 +107,7 @@ class ChatGPT_Client:
 
         self.browser = uc.Chrome(
             driver_executable_path=self.locals['driver_executable_path'],
-            options=self.locals['options'],
+            options=self.options,
             headless=self.locals['headless'],
             version_main=detect_chrome_version(self.locals['driver_version']),
             log_level=10,
@@ -253,7 +255,7 @@ class ChatGPT_Client:
             time.sleep(sleep_duration)
         return item
 
-    def wait_until_disappear(self, by, query, timeout_duration=15):
+    def wait_until_disappear(self, by, query, timeout_duration=30):
         '''
         Waits until the specified web element disappears from the page.
 
@@ -282,6 +284,28 @@ class ChatGPT_Client:
             logging.info(f'Element {query} still here, something is wrong.')
         return
 
+    def wait_until(self, by, query, timeout=600):
+        try:
+            WebDriverWait(
+                self.browser,
+                timeout
+            ).until(EC.presence_of_element_located(
+            (by, query)))
+            logging.info(f'Element {query} disappeared.')
+        except Exceptions.TimeoutException:
+            logging.info(f'Element {query} still here, something is wrong.')
+        return
+
+    def wait_result(self, wait):
+
+        logging.info('Message sent, waiting for response')
+        self.wait_until_disappear(By.CLASS_NAME, self.wait_cq)
+
+        wait.until_not(
+            EC.presence_of_element_located((By.CLASS_NAME, 'result-streaming'))
+        )
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, 'span[data-state="closed"]')))
     def interact(self, question : str):
         '''
         Sends a question and retrieves the answer from the ChatGPT system.
@@ -301,6 +325,10 @@ class ChatGPT_Client:
             str: The generated answer.
         '''
 
+        # Wait for the element to disappear using WebDriverWait
+        wait =  WebDriverWait(self.browser, self.response_timeout)
+        self.wait_result(wait)
+
         text_area = self.browser.find_elements(By.TAG_NAME, self.textarea_tq)
         if not text_area:
             logging.info('Unable to locate text area tag. Switching to ID search')
@@ -313,21 +341,15 @@ class ChatGPT_Client:
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
 
         text_area = text_area[0]
+        text_area.send_keys('')
 
         for each_line in question.split('\n'):
             text_area.send_keys(each_line)
             text_area.send_keys(Keys.SHIFT + Keys.ENTER)
         text_area.send_keys(Keys.RETURN)
-        logging.info('Message sent, waiting for response')
-        self.wait_until_disappear(By.CLASS_NAME, self.wait_cq)
 
-        # Wait for the element to disappear using WebDriverWait
-        wait =  WebDriverWait(self.browser, 30)
-        wait.until_not(
-            EC.presence_of_element_located((By.CLASS_NAME, 'result-streaming'))
-        )
-        wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, 'span[data-state="closed"]')))
+        self.wait_result(wait)
+
         answer = self.browser.find_elements(By.CLASS_NAME, self.chatbox_cq)[-1]
         logging.info('Answer is ready')
         return answer.text
