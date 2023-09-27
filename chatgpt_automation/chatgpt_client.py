@@ -320,7 +320,14 @@ class ChatGPT_Client:
         text_area.send_keys(Keys.RETURN)
         logging.info('Message sent, waiting for response')
         self.wait_until_disappear(By.CLASS_NAME, self.wait_cq)
-        self.wait_until_disappear(By.CSS_SELECTOR, 'span[data-state="closed"]')
+
+        # Wait for the element to disappear using WebDriverWait
+        wait =  WebDriverWait(self.browser, 30)
+        wait.until_not(
+            EC.presence_of_element_located((By.CLASS_NAME, 'result-streaming'))
+        )
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, 'span[data-state="closed"]')))
         answer = self.browser.find_elements(By.CLASS_NAME, self.chatbox_cq)[-1]
         logging.info('Answer is ready')
         return answer.text
