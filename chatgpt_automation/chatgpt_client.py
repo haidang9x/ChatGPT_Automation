@@ -69,7 +69,6 @@ class ChatGPT_Client:
 
         self.username = username = username or os.environ.get('OPENAI_UNAME')
         self.password = password = password or os.environ.get('OPENAI_PWD')
-        self.locals = locals()
 
         if not username:
             logging.error('Either provide username or set the environment variable "OPENAI_UNAME"')
@@ -91,6 +90,8 @@ class ChatGPT_Client:
         if driver_arguments:
             for _arg in driver_arguments:
                 options.add_argument(_arg)
+        self.locals = locals()
+        self.locals['options'] = options
 
         self.goLogin()
         if not cold_start:
