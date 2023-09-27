@@ -10,7 +10,6 @@ python = "^3.11"
 undetected-chromedriver = "^3.5.3"
 ichrome = "^3.2.0"
 selenium = "^4.13.0"
-chatgptpy = "^1.0.8"
 
 
 [build-system]
