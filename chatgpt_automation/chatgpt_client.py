@@ -328,6 +328,12 @@ class ChatGPT_Client:
             str: The generated answer.
         '''
 
+        if self.browser.find_elements(By.CSS_SELECTOR, '#enforcement-container iframe') or self.browser.find_elements(By.CSS_SELECTOR, 'iframe[title="Verification challenge"]'):
+            self.challenge = True
+            self.browser.quit()
+            raise RuntimeError('Cloudflare challenge!')
+            return
+        
         # Wait for the element to disappear using WebDriverWait
         wait =  WebDriverWait(self.browser, self.response_timeout)
         self.wait_result(wait)
@@ -337,11 +343,6 @@ class ChatGPT_Client:
             logging.info('Unable to locate text area tag. Switching to ID search')
             text_area = self.browser.find_elements(By.ID, self.textarea_iq)
         
-        if self.browser.find_elements(By.CSS_SELECTOR, '#enforcement-container iframe') or self.browser.find_elements(By.CSS_SELECTOR, 'iframe[title="Verification challenge"]'):
-            self.challenge = True
-            self.browser.quit()
-            raise RuntimeError('Cloudflare challenge!')
-            return
         if not text_area:
 
             self.browser.execute_script("""
