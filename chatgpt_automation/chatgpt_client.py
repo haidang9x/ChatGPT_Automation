@@ -83,17 +83,7 @@ class ChatGPT_Client:
         if verbose:
             logging.getLogger().setLevel(logging.INFO)
             logging.info('Verbose mode active')
-        options = uc.ChromeOptions()
-        if incognito:
-            options.add_argument('--incognito')
-        # if headless:
-        #     options.add_argument('--headless')
-        options.headless = False
-        if driver_arguments:
-            for _arg in driver_arguments:
-                options.add_argument(_arg)
         self.locals = locals()
-        self.options = options
 
         self.goLogin()
         if not cold_start:
@@ -103,11 +93,20 @@ class ChatGPT_Client:
 
     def goLogin(self):
         
+        options = uc.ChromeOptions()
+        if self.locals['incognito']:
+            options.add_argument('--incognito')
+        # if headless:
+        #     options.add_argument('--headless')
+        options.headless = False
+        if self.locals['driver_arguments']:
+            for _arg in self.locals['driver_arguments']:
+                options.add_argument(_arg)
         logging.info('Loading undetected Chrome')
 
         self.browser = uc.Chrome(
             driver_executable_path=self.locals['driver_executable_path'],
-            options=self.options,
+            options=options,
             headless=self.locals['headless'],
             version_main=detect_chrome_version(self.locals['driver_version']),
             log_level=10,
