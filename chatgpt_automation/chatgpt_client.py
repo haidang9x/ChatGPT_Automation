@@ -91,6 +91,7 @@ class ChatGPT_Client:
 
     def goLogin(self):
         self.closed = False
+        self.challenged = False
         options = uc.ChromeOptions()
         if self.locals['incognito']:
             options.add_argument('--incognito')
