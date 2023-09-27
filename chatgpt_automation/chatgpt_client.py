@@ -351,10 +351,11 @@ class ChatGPT_Client:
             """)
             self.closed = True
             self.browser.quit()
-            return
+            # return
             # self.goLogin()
             # return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
+            return
 
         text_area = text_area[0]
         text_area.send_keys('')
