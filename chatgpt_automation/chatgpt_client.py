@@ -47,6 +47,7 @@ class ChatGPT_Client:
 
     username = None
     password = None
+    locals = None
 
     def __init__(
         self,
@@ -68,6 +69,7 @@ class ChatGPT_Client:
 
         self.username = username = username or os.environ.get('OPENAI_UNAME')
         self.password = password = password or os.environ.get('OPENAI_PWD')
+        self.locals = locals()
 
         if not username:
             logging.error('Either provide username or set the environment variable "OPENAI_UNAME"')
@@ -299,6 +301,7 @@ class ChatGPT_Client:
             text_area = self.browser.find_elements(By.ID, self.textarea_iq)
         if not text_area:
             self.browser.quit()
+            self.__init__(**self.locals)
             self.login(username=self.username, password=self.password)
             return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
