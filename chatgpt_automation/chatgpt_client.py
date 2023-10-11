@@ -371,14 +371,17 @@ class ChatGPT_Client:
             # return self.interact(question=question)
             raise RuntimeError('Unable to find the text prompt area. Please raise an issue with verbose=True')
             return
-        text_area = text_area[0]
-        text_area.send_keys('')
+        text_area_e = text_area[0]
+        text_area_e.send_keys('')
         self.browser.execute_script(f'document.getElementById("{self.textarea_iq}").value="";')
 
-        for each_line in question.split('\n'):
-            text_area.send_keys(each_line)
-            text_area.send_keys(Keys.SHIFT + Keys.ENTER)
-        text_area.send_keys(Keys.RETURN)
+        # for each_line in question.split('\n'):
+        #     text_area_e.send_keys(each_line)
+        #     text_area_e.send_keys(Keys.SHIFT + Keys.ENTER)
+        # text_area_e.send_keys(Keys.RETURN)
+        self.browser.execute_script('arguments[0].value=arguments[1];arguments[0].focus()', text_area[0], question)
+        text_area_e.send_keys(Keys.SHIFT + Keys.ENTER)
+        text_area_e.send_keys(Keys.RETURN)
 
         self.wait_result(wait)
 
