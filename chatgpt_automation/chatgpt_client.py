@@ -314,7 +314,7 @@ class ChatGPT_Client:
             EC.presence_of_element_located((By.CLASS_NAME, 'result-streaming'))
         )
         wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, 'span[data-state="closed"]')))
+            (By.CSS_SELECTOR, 'button span[data-state="closed"]')))
     def interact(self, question : str):
         '''
         Sends a question and retrieves the answer from the ChatGPT system.
@@ -385,6 +385,12 @@ class ChatGPT_Client:
 
         self.wait_result(wait)
 
+        unknow_policy = self.browser.find_elements(By.CSS_SELECTOR, '.fixed button.btn.relative.btn-neutral')
+        if unknow_policy:
+            unknow_policy[0].click()
+            time.sleep(1)
+            return question
+        
         answer = self.browser.find_elements(By.CLASS_NAME, self.chatbox_cq)[-1]
         logging.info('Answer is ready')
         return answer.text
