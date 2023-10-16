@@ -15,6 +15,8 @@ import selenium.common.exceptions as Exceptions
 
 from .helpers import detect_chrome_version
 
+import asyncio
+
 logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s',
     datefmt='%Y/%m/%d %H:%M:%S',
@@ -308,13 +310,13 @@ class ChatGPT_Client:
     def wait_result(self, wait):
 
         logging.info('Message sent, waiting for response')
-        self.wait_until_disappear(By.CLASS_NAME, self.wait_cq)
-
         wait.until_not(
             EC.presence_of_element_located((By.CLASS_NAME, 'result-streaming'))
         )
-        wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, 'button span[data-state="closed"]')))
+
+        self.wait_until_disappear(By.CLASS_NAME, self.wait_cq)
+
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'button span[data-state="closed"]')))
     def interact(self, question : str):
         '''
         Sends a question and retrieves the answer from the ChatGPT system.
@@ -383,18 +385,33 @@ class ChatGPT_Client:
         text_area_e.send_keys(Keys.SHIFT + Keys.ENTER)
         text_area_e.send_keys(Keys.RETURN)
 
+        #error:
+        asyncio.run(self.check_error())
         self.wait_result(wait)
 
-        unknow_policy = self.browser.find_elements(By.CSS_SELECTOR, '.fixed button.btn.relative.btn-neutral')
-        if unknow_policy:
-            unknow_policy[0].click()
-            time.sleep(1)
-            return question
-        
+        try:
+            unknow_policy = self.browser.find_elements(By.CSS_SELECTOR, '.fixed button.btn.relative.btn-neutral')
+            if unknow_policy:
+                unknow_policy[0].click()
+                time.sleep(1)
+                return question
+        except:
+            print('error unknow_policy')
+
         answer = self.browser.find_elements(By.CLASS_NAME, self.chatbox_cq)[-1]
+
+
         logging.info('Answer is ready')
         return answer.text
 
+    async def check_error(self):
+        await asyncio.sleep(2)
+        if self.browser.find_elements(By.CSS_SELECTOR, '.flex-col.items-start.gap-3.whitespace-pre-wrap.break-words.text-red-500') or not self.browser.find_elements(By.TAG_NAME, self.textarea_tq):
+            self.closed = True
+            self.browser.quit()
+            x=1/0
+            raise RuntimeError('Message errors!')
+        
     def reset_thread(self):
         '''Function to close the current thread and start new one'''
         self.browser.find_element(By.XPATH, self.reset_xq).click()
